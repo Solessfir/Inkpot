@@ -196,6 +196,12 @@ Some version control systems will make the file read only when you check them ou
 This can lead to some confusion when running Inky alongside Unreal & Inkpot.<br>
 
 
+## Runtime story instances
+
+Each `BeginStory` call creates an independent runtime handle, including concurrent instances of the same asset. Retain the returned `UInkpotStory*` to continue, end, or replay that specific instance. Asset-based `GetStory` and editor `Reload` select the most recently started active instance; after it ends, they select the latest remaining instance.
+
+C++ listeners can use `OnLineComplete()` to observe render-context completion. `OnFlowEnded()` reports natural completion after the flow's final render contexts have ended.
+
 ## Module Structure
 Inkpot is made from three modules. <br>
 

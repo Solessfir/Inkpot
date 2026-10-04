@@ -8,11 +8,11 @@ TMap<FString, TSharedPtr<Ink::FObject>> Ink::FJsonExtension::JSONObjectToInkObje
 	TMap<FString, TSharedPtr<Ink::FObject>> convertedMap;
 	convertedMap.Reserve(InJSONObject.Num());
 
-	for (const TPair<FString, TSharedPtr<FJsonValue>>& jsonPair : InJSONObject)
+	for (const auto& jsonPair : InJSONObject)
 	{
 		const FString& key = *jsonPair.Key;
 		TSharedPtr<Ink::FObject> value(Ink::FJsonSerialisation::JsonTokenToRuntimeObject(*jsonPair.Value));
-		convertedMap.Add(jsonPair.Key, value);
+		convertedMap.Add(key, value);
 	}
 
 	return convertedMap;

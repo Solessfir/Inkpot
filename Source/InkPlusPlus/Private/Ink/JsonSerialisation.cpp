@@ -227,9 +227,9 @@ TSharedPtr<Ink::FContainer> Ink::FJsonSerialisation::JsonArrayToContainer(const 
 void Ink::FJsonSerialisation::WriteDictionaryRuntimeObjects(TJsonWriter<>* InJSONWriter, const TMap<FStringType, TSharedPtr<Ink::FObject>>& InDictionary)
 {
 	InJSONWriter->WriteObjectStart();
-	for (const TPair<FString, TSharedPtr<Ink::FObject>>& pair : InDictionary)
+	for (const auto& pair : InDictionary)
 	{
-		InJSONWriter->WriteIdentifierPrefix(pair.Key);
+		InJSONWriter->WriteIdentifierPrefix(*pair.Key);
 		WriteRuntimeObject(InJSONWriter, pair.Value);
 	}
 	InJSONWriter->WriteObjectEnd();
@@ -248,9 +248,9 @@ void Ink::FJsonSerialisation::WriteListRuntimeObjects(TJsonWriter<>* InJSONWrite
 void Ink::FJsonSerialisation::WriteIntDictionary(TJsonWriter<>* InJSONWriter,const TMap<FStringType, int32>& InDictionary)
 {
 	InJSONWriter->WriteObjectStart();
-	for (const TPair<FString, int32>& pair : InDictionary)
+	for (const auto& pair : InDictionary)
 	{
-		InJSONWriter->WriteValue(pair.Key, pair.Value);
+		InJSONWriter->WriteValue(*pair.Key, pair.Value);
 	}
 	InJSONWriter->WriteObjectEnd();
 }

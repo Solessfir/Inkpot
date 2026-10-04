@@ -49,12 +49,7 @@ UInkpotStory* UInkpotStories::BeginStory( UInkpotStoryAsset* InInkpotStoryAsset 
 		return StoryFactory->BadStory();
 	}
 
-	int32 handle;
-	const int32 *keyptr = StoryAssets.FindKey( InInkpotStoryAsset );
-	if(keyptr)
-		handle = *keyptr;
-	else
-		handle = NextStoryHandle++;
+	const int32 handle = NextStoryHandle++;
 
 	UInkpotStory* storyNew = StoryFactory->CreateStory(InInkpotStoryAsset, handle, this);
 
@@ -74,7 +69,10 @@ UInkpotStory* UInkpotStories::BeginStory( UInkpotStoryAsset* InInkpotStoryAsset 
 
 void UInkpotStories::EndStory(UInkpotStory *InStory)
 {
-	if(!InStory)
+	if(!IsValid(InStory))
+		return;
+	const TObjectPtr<UInkpotStory>* RegisteredStory = Stories.Find(InStory->GetID());
+	if (!RegisteredStory || RegisteredStory->Get() != InStory)
 		return;
 	EndStory( InStory->GetID() );
 }
@@ -98,26 +96,36 @@ UInkpotStory* UInkpotStories::GetStory( int32 InStoryHandle ) const
 	return Stories[InStoryHandle];
 }
 
-UInkpotStory* UInkpotStories::GetStory( TSoftObjectPtr<UInkpotStoryAsset>  InStoryAssetPath )
+int32 UInkpotStories::FindStoryHandle(TSoftObjectPtr<UInkpotStoryAsset> InStoryAssetPath) const
 {
-	FString inStoryAssetPath = InStoryAssetPath.ToString();
-	for (auto pair : StoryAssets)
+	const FString AssetPath = InStoryAssetPath.ToString();
+	int32 StoryHandle = FInkpotStoryInternal::BadStoryHandle;
+	// Asset-based APIs select the most recently started instance.
+	for (const auto& Pair : StoryAssets)
 	{
-		UInkpotStoryAsset* asset = pair.Value;
-		FString assetPath = asset->GetPathName();
-		if (inStoryAssetPath.Equals(assetPath))
+		if (Pair.Key > StoryHandle && AssetPath.Equals(Pair.Value->GetPathName()))
 		{
-			int32 storyID = pair.Key;
-			return GetStory(storyID);
+			StoryHandle = Pair.Key;
 		}
 	}
-	INKPOT_ERROR("Story '%s' is not running.", *inStoryAssetPath);
+	return StoryHandle;
+}
+
+UInkpotStory* UInkpotStories::GetStory( TSoftObjectPtr<UInkpotStoryAsset>  InStoryAssetPath )
+{
+	const int32 StoryHandle = FindStoryHandle(InStoryAssetPath);
+	if (StoryHandle != FInkpotStoryInternal::BadStoryHandle)
+		return GetStory(StoryHandle);
+	INKPOT_ERROR("Story '%s' is not running.", *InStoryAssetPath.ToString());
 	return StoryFactory->BadStory();
 }
 
 UInkpotStoryAsset* UInkpotStories::GetStoryAsset(UInkpotStory* InkpotStory)
 {
 	if (!IsValid(InkpotStory))
+		return nullptr;
+	const TObjectPtr<UInkpotStory>* RegisteredStory = Stories.Find(InkpotStory->GetID());
+	if (!RegisteredStory || RegisteredStory->Get() != InkpotStory)
 		return nullptr;
 	int handle = InkpotStory->GetID();
 
@@ -130,17 +138,16 @@ UInkpotStoryAsset* UInkpotStories::GetStoryAsset(UInkpotStory* InkpotStory)
 
 UInkpotStory* UInkpotStories::Reload( UInkpotStoryAsset* InInkpotStoryAsset )
 {
-	const int32 *keyptr = StoryAssets.FindKey( InInkpotStoryAsset );
-	if(!keyptr)
+	const int32 handle = FindStoryHandle(InInkpotStoryAsset);
+	if(handle == FInkpotStoryInternal::BadStoryHandle)
 		return nullptr;
-	int32 handle = *keyptr;
 
 	TObjectPtr<UInkpotStory>* storyInProgressPtr = Stories.Find( handle );
 	if(!storyInProgressPtr)
 		return nullptr;
 
 	TSharedPtr<FInkpotStoryInternal> storyInternal = StoryFactory->CreateInternalStory( InInkpotStoryAsset, handle );
-	if(!storyInternal->IsValidStory())
+	if(!storyInternal.IsValid() || !storyInternal->IsValidStory())
 		return nullptr;
 
 	UInkpotStory *story = storyInProgressPtr->Get();
@@ -150,7 +157,10 @@ UInkpotStory* UInkpotStories::Reload( UInkpotStoryAsset* InInkpotStoryAsset )
 
 void UInkpotStories::Replay( UInkpotStory* InStory, bool bInResetState )
 {
-	if(!InStory)
+	if(!IsValid(InStory))
+		return;
+	const TObjectPtr<UInkpotStory>* RegisteredStory = Stories.Find(InStory->GetID());
+	if (!RegisteredStory || RegisteredStory->Get() != InStory)
 		return;
 
 	int index = InStory->GetID();

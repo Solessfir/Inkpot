@@ -1076,6 +1076,11 @@ FOnStoryLoadJSON& UInkpotStory::OnStoryLoadJSON()
 	return EventOnStoryLoadJSON;
 }
 
+FOnLineComplete& UInkpotStory::OnLineComplete()
+{
+	return EventOnLineComplete;
+}
+
 FOnFlowEnded& UInkpotStory::OnFlowEnded()
 {
 	return EventOnFlowEnded;

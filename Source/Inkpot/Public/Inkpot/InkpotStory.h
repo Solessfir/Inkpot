@@ -864,6 +864,7 @@ public:
 	FOnChoosePath& OnChoosePath();
 	FOnSwitchFlow& OnSwitchFlow();
 	FOnStoryLoadJSON& OnStoryLoadJSON();
+	FOnLineComplete& OnLineComplete();
 	FOnFlowEnded& OnFlowEnded();
 
 #if WITH_EDITOR 
@@ -1037,4 +1038,3 @@ bool UInkpotStory::GetVariable( const FString& InVariable, Ink::EValueType InTyp
 
 	return success;
 }
-
